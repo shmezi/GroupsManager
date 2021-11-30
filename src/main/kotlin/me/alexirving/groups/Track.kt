@@ -21,8 +21,7 @@ class Track(val name: String, val groups: ArrayList<Group>) {
             return false
         else
             setPlayerGroup(group, player)
-        group.promote(player)
-
+        group.runPromotionActions(player)
         return true
     }
 
@@ -37,8 +36,8 @@ class Track(val name: String, val groups: ArrayList<Group>) {
             return false
         else
             setPlayerGroup(group, player)
-        previous.demote(player)
-        group.promote(player)
+        previous.runDemotionActions(player)
+        group.runPromotionActions(player)
 
         return true
     }
@@ -54,14 +53,20 @@ class Track(val name: String, val groups: ArrayList<Group>) {
      * Get the current group a player is in.
      */
     fun getPlayerGroup(player: Player): Group {
-        return getGroupFromName(getValue("GM_TRACKS", player, name))
+        val v = getValue("GM_TRACKS", player, name)
+        return getGroupFromName(v)!!
+
     }
 
     /**
      * Gets a group from a string.
      */
-    fun getGroupFromName(name: String): Group {
-        return groups.filter { it.name == name }[0]
+    fun getGroupFromName(name: String): Group? {
+        val fg = groups.filter { it.name == name }
+        return if (fg.isEmpty())
+            null
+        else
+            fg[0]
     }
 
     /**

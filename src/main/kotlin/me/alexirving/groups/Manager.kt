@@ -1,9 +1,9 @@
 package me.alexirving.groups
 
+import me.alexirving.addColumn
 import me.alexirving.getValue
 import me.alexirving.setValue
 import org.bukkit.configuration.ConfigurationSection
-import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.entity.Player
 
 /**
@@ -16,7 +16,6 @@ class Manager {
         var papi = false
     }
 
-
 }
 
 
@@ -24,11 +23,12 @@ class Manager {
  * Reloads all the tracks.
  * @param trackConfig The config file of the tracks.
  */
-fun reloadTracks(trackConfig: FileConfiguration) {
+fun reloadTracks(trackConfig: ConfigurationSection) {
     Manager.tracks.clear()
     for (track: String in trackConfig.getKeys(false)) {
-        var tempG: ArrayList<Group> = ArrayList()
-        for (group: String in trackConfig.getConfigurationSection(track).getKeys(false)) {
+        val tempG: ArrayList<Group> = ArrayList()
+        val groups = trackConfig.getConfigurationSection(track).getKeys(false)
+        for (group: String in groups) {
             tempG.add(
                 Group(
                     group, trackConfig.getInt("${track}.${group}"),
@@ -39,6 +39,9 @@ fun reloadTracks(trackConfig: FileConfiguration) {
 
         }
         Manager.tracks.add(Track(track, tempG))
+        addColumn("GM_PLAYTIME", track, groups.first())
+        addColumn("GM_TRACKS", track, groups.first())
+
     }
 }
 
@@ -50,10 +53,17 @@ fun setPlayTime(track: Track, player: Player, time: Long) {
 }
 
 /**
- * Add an amount of time for a player in the database
+ * Add an amount of time for a player in the database (MS)
  */
 fun addToPlayTime(track: Track, player: Player, time: Long) {
-    setPlayTime(track, player, getValue("GM_PLAYTIME", player, track.name).toLong())
+    setPlayTime(track, player, getValue("GM_PLAYTIME", player, track.name).toLong() + time)
+}
+
+/**
+ * Remove an amount of time for a player in the database (MS)
+ */
+fun subtractFromTime(track: Track, player: Player, time: Long) {
+    setPlayTime(track, player, getValue("GM_PLAYTIME", player, track.name).toLong() - time)
 }
 
 /**
@@ -63,17 +73,14 @@ fun updatePlayTime(track: Track, player: Player) {
     addToPlayTime(track, player, System.currentTimeMillis() - Manager.players.get(player)!!)
 }
 
-fun promotePlayer(track: Track, player: Player) {
-    track.getPlayerGroup(player).promote(player)
-}
-
-fun demotePlayer(track: Track, player: Player) {
-    track.getPlayerGroup(player).demote(player)
-}
-
-
-fun getTrackFromName(name: String): Track {
-    return Manager.tracks.filter { it.name == name }[0]
+/**
+ * Gets a track from a string (returns null if not found)
+ */
+fun getTrackFromName(name: String): Track? {
+    return if (Manager.tracks.filter { it.name == name }.size <= 0)
+        null
+    else
+        Manager.tracks.filter { it.name == name }[0]
 }
 
 
@@ -97,10 +104,12 @@ fun getActions(type: Int, groupConfig: ConfigurationSection): ArrayList<Action> 
 
     }
     var tempP: ArrayList<Action> = ArrayList()
+    if (groupConfig.getConfigurationSection(actionRunner) == null)
+        return tempP
     for (action: String in groupConfig.getConfigurationSection(actionRunner).getKeys(false)) {
         tempP.add(
             Action(
-                ActionType.valueOf(groupConfig.getString("$actionRunner.$action")),
+                ActionType.valueOf(action.uppercase()),
                 groupConfig.getStringList("$actionRunner.$action")
             )
         )

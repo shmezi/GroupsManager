@@ -20,9 +20,9 @@ var ds: HikariDataSource = HikariDataSource()
  */
 fun initDb(host: String, port: Int, database: String, username: String, password: String) {
     config.jdbcUrl = "jdbc:mysql://${host}:${port}/${database}"
+    config.username = username
+    config.password = password
     ds = HikariDataSource(config)
-    ds.username = username;
-    ds.password = password
     ds.connectionInitSql
 }
 
@@ -32,7 +32,9 @@ fun initDb(host: String, port: Int, database: String, username: String, password
  * @param statement The statement to prepare.
  */
 fun prepareStatement(statement: String): PreparedStatement {
-    return ds.connection.prepareStatement(statement)
+    val ps = ds.getConnection().prepareStatement(statement)
+    ds.close()
+    return ps
 }
 
 
@@ -66,28 +68,30 @@ fun getValue(table: String, player: Player, key: String): String {
  * @param table The table to add to.
  * @param name The column name to add.
  */
-fun addColumn(table: String, name: String) {
+fun addColumn(table: String, name: String, default: String) {
     prepareStatement(
-        "ALTER TABLE $table ADD IF NOT EXISTS `${name}` INT(120) NOT NULL DEFAULT '0' AFTER `uuid`;"
+        "ALTER TABLE $table ADD IF NOT EXISTS `${name}` VARCHAR(120) NOT NULL DEFAULT '$default' AFTER `uuid`;"
     ).executeUpdate()
 }
 
 /**
- * Create a table if it doesn't already exist.
- * @param name The name of the table to create.
+ * Create a table / tables if it / they doesn't / don't already exist.
+ * @param names The name of the table to create.
  */
-fun createTable(name: String) {
-    prepareStatement("CREATE TABLE IF NOT EXISTS `$name` ( `uuid` VARCHAR(64) NOT NULL, PRIMARY KEY (`uuid`));").executeUpdate()
+fun createTables(vararg names: String) {
+    for (name: String in names)
+        prepareStatement("CREATE TABLE IF NOT EXISTS `$name` ( `uuid` VARCHAR(64) NOT NULL, PRIMARY KEY (`uuid`));").executeUpdate()
 }
+
 
 /**
  * Get the amount of columns in the database. Useful for adding a player to a database.
  */
 fun getColumnCount(table: String): Int {
     val stat =
-        prepareStatement("SELECT Count(*) FROM INFORMATION_SCHEMA.Columns where TABLE_NAME = '$table'").executeQuery()
+        prepareStatement("SELECT Count(*) FROM INFORMATION_SCHEMA.Columns where TABLE_NAME = '$table';").executeQuery()
     return if (stat.next())
-        stat.getInt("COUNT(*);")
+        stat.getInt("Count(*)")
     else
         0
 }
