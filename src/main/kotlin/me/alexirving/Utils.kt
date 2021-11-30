@@ -1,5 +1,9 @@
 package me.alexirving
 
+import me.alexirving.groups.Action
+import me.alexirving.groups.ActionType
+import me.alexirving.groups.CommandAction
+import me.alexirving.groups.MessageAction
 import me.clip.placeholderapi.PlaceholderAPI
 import net.milkbowl.vault.economy.Economy
 import net.milkbowl.vault.permission.Permission
@@ -10,6 +14,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.Listener
 import org.bukkit.plugin.RegisteredServiceProvider
 import org.bukkit.plugin.java.JavaPlugin
+import java.util.regex.Pattern
 
 /**
  * Simplifies the task of logging while making sure all logging looks the same.
@@ -106,6 +111,28 @@ fun registerEvents(plugin: JavaPlugin, vararg listeners: Listener) {
         server.registerEvents(listener, plugin)
 
 }
+
+fun compileAction(action: String): Action? {
+    val validate =
+        Pattern.compile("(^(?=COMMAND (PLAYER|CONSOLE) (..*)$))|(^(?=MESSAGE (..*)$))")
+    val matcher = validate.matcher(action)
+    return if (matcher.matches()) {
+        val p =
+            Pattern.compile("^(?<Prefix>COMMAND|MESSAGE) (?<Action>PLAYER|CONSOLE)? ?(?<Content>..*)")
+        val m2 = p.matcher(action)
+        when (ActionType.valueOf(m2.group("Prefix"))) {
+            ActionType.COMMAND -> {
+                CommandAction(m2.group("Content"), m2.group("Action").equals("CONSOLE"))
+            }
+            ActionType.MESSAGE -> {
+                MessageAction(m2.group("Content"))
+            }
+        }
+    } else {
+        null
+    }
+}
+
 
 
 

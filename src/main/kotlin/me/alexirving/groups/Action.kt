@@ -1,7 +1,5 @@
 package me.alexirving.groups
 
-import me.alexirving.formatMessage
-import org.bukkit.Bukkit.getServer
 import org.bukkit.entity.Player
 
 
@@ -10,30 +8,11 @@ import org.bukkit.entity.Player
  * @param type The Type of action.
  * @param contents A list of the contents of the action like for example the message to be sent.
  */
-class Action(val type: ActionType, val contents: List<String>) {
+
+abstract class Action(val type: ActionType, val content: String) {
     /**
      * Execute the action on a player!
      * @param player Player to execute this action on.
      */
-    fun execute(player: Player) {
-        when (type) {
-            ActionType.COMMAND -> {
-                for (content: String in contents) {
-                    getServer().dispatchCommand(
-                        getServer().consoleSender, formatMessage(player, content)
-                    )
-                }
-
-            }
-            ActionType.MESSAGE -> {
-                for (content: String in contents) {
-                    player.sendMessage(formatMessage(player, content))
-                }
-
-
-            }
-
-
-        }
-    }
+    abstract fun execute(player: Player)
 }

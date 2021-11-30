@@ -23,7 +23,7 @@ fun initDb(host: String, port: Int, database: String, username: String, password
     config.username = username
     config.password = password
     ds = HikariDataSource(config)
-    ds.connectionInitSql
+
 }
 
 
@@ -32,9 +32,7 @@ fun initDb(host: String, port: Int, database: String, username: String, password
  * @param statement The statement to prepare.
  */
 fun prepareStatement(statement: String): PreparedStatement {
-    val ps = ds.getConnection().prepareStatement(statement)
-    ds.close()
-    return ps
+    return ds.getConnection().prepareStatement(statement)
 }
 
 
@@ -71,6 +69,18 @@ fun getValue(table: String, player: Player, key: String): String {
 fun addColumn(table: String, name: String, default: String) {
     prepareStatement(
         "ALTER TABLE $table ADD IF NOT EXISTS `${name}` VARCHAR(120) NOT NULL DEFAULT '$default' AFTER `uuid`;"
+    ).executeUpdate()
+
+}
+
+/**
+ * Adds a column to the desired table
+ * @param table The table to add to.
+ * @param name The column name to add.
+ */
+fun addColumn(table: String, name: String, default: Int) {
+    prepareStatement(
+        "ALTER TABLE $table ADD IF NOT EXISTS `${name}` INT(120) NOT NULL DEFAULT '$default' AFTER `uuid`;"
     ).executeUpdate()
 }
 

@@ -2,7 +2,9 @@ package me.alexirving.groups
 
 import me.alexirving.addColumn
 import me.alexirving.getValue
+import me.alexirving.groups.actions.Action
 import me.alexirving.setValue
+import net.milkbowl.vault.economy.Economy
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
 
@@ -14,6 +16,7 @@ class Manager {
         var players: HashMap<Player, Long> = HashMap()
         var tracks: ArrayList<Track> = ArrayList()
         var papi = false
+        var econ: Economy? = null
     }
 
 }
@@ -39,7 +42,7 @@ fun reloadTracks(trackConfig: ConfigurationSection) {
 
         }
         Manager.tracks.add(Track(track, tempG))
-        addColumn("GM_PLAYTIME", track, groups.first())
+        addColumn("GM_PLAYTIME", track, 0)
         addColumn("GM_TRACKS", track, groups.first())
 
     }

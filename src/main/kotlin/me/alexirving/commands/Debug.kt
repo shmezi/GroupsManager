@@ -16,6 +16,7 @@ class Debug : CommandExecutor {
         label: String,
         args: Array<out String>
     ): Boolean {
+        log(LogType.INFO, "Sending debug info!")
         for (track: Track in Manager.tracks) {
             log(LogType.LOG, "Registered a track called: ${track.name}")
             for (group: Group in track.groups) {
