@@ -1,0 +1,21 @@
+Sql:
+  Host: ""
+  Database: ""
+  Username: ""
+  Password: ""
+Tracks:
+  Shmezi:
+    Cool:
+      Price: 10
+      Time: 10 # Amount of time in ms
+      On-Promote:
+        ECO:
+          SET: 13
+          GIVE: 10
+        COMMAND:
+          - ""
+        MESSAGE:
+          - ""
+      On-Demote:
+    Wow: #ID
+      Price: 20

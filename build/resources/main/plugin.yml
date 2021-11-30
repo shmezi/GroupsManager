@@ -1,0 +1,9 @@
+main: me.alexirving.GroupManager
+name: GroupManager
+authors: [ AlexIrving, Shmezi ]
+version: 1.0
+depend: [ Vault ]
+softdepend: [ PlaceholderAPI ]
+commands:
+  store:
+  debug:
