@@ -1,12 +1,19 @@
 package me.alexirving.groups
 
+import me.alexirving.actions.Action
 import me.alexirving.addColumn
 import me.alexirving.getValue
-import me.alexirving.groups.actions.Action
 import me.alexirving.setValue
+import me.alexirving.utils.LogType
+import me.alexirving.utils.compileAction
+import me.alexirving.utils.formatMessage
+import me.alexirving.utils.log
 import net.milkbowl.vault.economy.Economy
+import org.bukkit.ChatColor
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
+import java.io.File
+import java.util.*
 
 /**
  * Main manager for GroupManager
@@ -17,26 +24,44 @@ class Manager {
         var tracks: ArrayList<Track> = ArrayList()
         var papi = false
         var econ: Economy? = null
+        var lang: Properties = Properties()
     }
 
 }
 
+fun loadLang(langFile: File) {
+    Manager.lang.load(langFile.inputStream())
+}
+
+/**
+ * Get a definition from the lang file and format it.
+ * @param name Name of property in lang file
+ * @param player A player, if needed that will be used for replacing placeholders (will only actually use first player given.)
+ */
+fun getDefFormat(name: String, vararg player: Player): String {
+    return if (player.isEmpty())
+        ChatColor.translateAlternateColorCodes('&', Manager.lang.getProperty(name))
+    else
+        formatMessage(player[0], Manager.lang.getProperty(name))
+}
 
 /**
  * Reloads all the tracks.
- * @param trackConfig The config file of the tracks.
+ * @param tracksConfig The config file of the tracks.
  */
-fun reloadTracks(trackConfig: ConfigurationSection) {
+fun reloadTracks(tracksConfig: ConfigurationSection) {
     Manager.tracks.clear()
-    for (track: String in trackConfig.getKeys(false)) {
+    for (track: String in tracksConfig.getKeys(false)) {
         val tempG: ArrayList<Group> = ArrayList()
-        val groups = trackConfig.getConfigurationSection(track).getKeys(false)
+        val groups = tracksConfig.getConfigurationSection(track).getKeys(false)
         for (group: String in groups) {
             tempG.add(
                 Group(
-                    group, trackConfig.getInt("${track}.${group}"),
-                    getActions(0, trackConfig.getConfigurationSection("$track.$group")),
-                    getActions(1, trackConfig.getConfigurationSection("$track.$group"))
+                    group,
+                    tracksConfig.getInt("${track}.${group}.Price"),
+                    tracksConfig.getLong("${track}.${group}.Time"),
+                    compileActions(tracksConfig.getStringList("$track.$group.On-Promote")),
+                    compileActions(tracksConfig.getStringList("$track.$group.On-Demote"))
                 )
             )
 
@@ -70,6 +95,13 @@ fun subtractFromTime(track: Track, player: Player, time: Long) {
 }
 
 /**
+ * Gets the current time passed for this user.
+ */
+fun getTime(track: Track, player: Player): Int {
+    return getValue("GM_PLAYTIME", player, track.name).toInt()
+}
+
+/**
  * Update the play time for a player in the database.
  */
 fun updatePlayTime(track: Track, player: Player) {
@@ -92,30 +124,15 @@ fun getTrackFromName(name: String): Track? {
  * @param type 0 - Gets the promotion actions. 1 - Gets the demotion actions. (Default - 1)
  * @param groupConfig The configuration section of the group.
  */
-fun getActions(type: Int, groupConfig: ConfigurationSection): ArrayList<Action> {
-    var actionRunner: String = ""
-    actionRunner = when (type) {
-        0 -> {
-            "On-Promote"
-        }
-        1 -> {
-            "On-Demote"
-        }
-        else -> {
-            "On-Promote"
-        }
-
-    }
-    var tempP: ArrayList<Action> = ArrayList()
-    if (groupConfig.getConfigurationSection(actionRunner) == null)
+fun compileActions(actions: List<String>?): ArrayList<Action> {
+    val tempP: ArrayList<Action> = ArrayList()
+    if (actions == null)
         return tempP
-    for (action: String in groupConfig.getConfigurationSection(actionRunner).getKeys(false)) {
-        tempP.add(
-            Action(
-                ActionType.valueOf(action.uppercase()),
-                groupConfig.getStringList("$actionRunner.$action")
-            )
-        )
+    for (action: String in actions) {
+        if (compileAction(action) == null)
+            log(LogType.ERROR, "The following action has bad syntax! '$action'")
+        else
+            tempP.add(compileAction(action)!!)
     }
     return tempP
 }

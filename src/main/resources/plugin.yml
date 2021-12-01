@@ -7,3 +7,5 @@ softdepend: [ PlaceholderAPI ]
 commands:
   store:
   debug:
+  manage:
+  gmreload:

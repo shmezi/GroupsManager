@@ -1,7 +1,6 @@
 package me.alexirving.groups
 
 import me.alexirving.getValue
-import me.alexirving.noLowerThenZero
 import me.alexirving.setValue
 import org.bukkit.entity.Player
 
@@ -31,14 +30,14 @@ class Track(val name: String, val groups: ArrayList<Group>) {
      */
     fun demote(player: Player): Boolean {
         val previous = getPlayerGroup(player)
-        val group = getNextGroup(previous)
+        val group = getPreviousGroup(previous)
         if (group == null)
             return false
-        else
+        else {
             setPlayerGroup(group, player)
-        previous.runDemotionActions(player)
-        group.runPromotionActions(player)
-
+            previous.runDemotionActions(player)
+            group.runPromotionActions(player)
+        }
         return true
     }
 
@@ -83,10 +82,10 @@ class Track(val name: String, val groups: ArrayList<Group>) {
      * Get the previous group in the track
      */
     fun getPreviousGroup(group: Group): Group? {
-        return if (noLowerThenZero(groups.size - 1) <= (groups.indexOf(group) - 1))
+        return if (groups.size == 0 || groups.indexOf(group) == 0)
             null
         else
-            groups[groups.indexOf(group) + 1]
+            groups[groups.indexOf(group) - 1]
     }
 
 

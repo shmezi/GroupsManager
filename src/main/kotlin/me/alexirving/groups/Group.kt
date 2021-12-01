@@ -1,5 +1,6 @@
 package me.alexirving.groups
 
+import me.alexirving.actions.Action
 import org.bukkit.entity.Player
 
 /**
@@ -11,17 +12,19 @@ import org.bukkit.entity.Player
 class Group(
     val name: String,
     val price: Int,
-    val promoteActions: ArrayList<Action>,
-    val demoteActions: ArrayList<Action>
+    val time: Long,
+    val promoteActions: ArrayList<Action>?,
+    val demoteActions: ArrayList<Action>?
 ) {
     /**
      * Run the actions for promoting a user.
      * @param player The player to be promoted
      */
     fun runPromotionActions(player: Player) {
-        for (action: Action in promoteActions) {
-            action.execute(player)
-        }
+        if (promoteActions != null)
+            for (action: Action in promoteActions) {
+                action.execute(player)
+            }
     }
 
     /**
@@ -29,9 +32,10 @@ class Group(
      * @param player The player to be promoted
      */
     fun runDemotionActions(player: Player) {
-        for (action: Action in demoteActions) {
-            action.execute(player)
-        }
+        if (demoteActions != null)
+            for (action: Action in demoteActions) {
+                action.execute(player)
+            }
     }
 
 

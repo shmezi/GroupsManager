@@ -13,5 +13,6 @@ class PlayerLeave : Listener {
         for (track: Track in Manager.tracks) {
             updatePlayTime(track, e.player)
         }
+        Manager.players.put(e.player,0)
     }
 }
