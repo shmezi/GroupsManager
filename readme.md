@@ -1,1 +1,1 @@
-<h1>A GroupManager I made for Devinics as an example!</h1>
+<h1>A GroupManager for spigot that includes actions and other cool features</h1>
